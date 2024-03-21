@@ -1,0 +1,38 @@
+---
+- name: Install and configure DHCP, TFTP, and HTTP servers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install DHCP, TFTP, and HTTP server packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - dhcp
+        - tftp-server
+        - httpd
+
+    - name: Configure DHCP server
+      template:
+        src: dhcpd.conf.j2
+        dest: /etc/dhcp/dhcpd.conf
+      notify:
+        - restart dhcpd
+
+    - name: Start and enable TFTP server
+      service:
+        name: tftp
+        state: started
+        enabled: yes
+
+    - name: Start and enable HTTP server
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart dhcpd
+      service:
+        name: dhcpd
+        state: restarted
